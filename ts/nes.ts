@@ -7,14 +7,14 @@ type malloc_t = (size: number) => pointer;
 type heap_reset_t = () => void;
 type any_to_any_t = (...args: any[]) => any;
 
-interface NES_ROM_Emulator {
+interface NES_Emulator {
 	memory: WebAssembly.Memory;
 	malloc: malloc_t;
 	emulate_nes_rom: emulate_nes_rom_t;
 	heap_reset: heap_reset_t;
 }
 
-const nes_rom_emulator: Promise<NES_ROM_Emulator> = WebAssembly.instantiateStreaming(
+const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
 			putd: alert
@@ -33,14 +33,29 @@ const nes_rom_emulator: Promise<NES_ROM_Emulator> = WebAssembly.instantiateStrea
 	};
 });
 
+function emulate_nes_rom(rom_data: ArrayBuffer): any {
+	nes_emulator.then(_nes_emulator => {
+		_nes_emulator.heap_reset();
+
+		const buffer = new Uint8Array(rom_data);
+
+		const len = buffer.length;
+		const buf = _nes_emulator.malloc(len);
+
+		new Uint8Array(_nes_emulator.memory.buffer, buf, len).set(buffer);
+
+		_nes_emulator.emulate_nes_rom(buf, len);
+	});
+}
+
 const rom_input = document.getElementById("rom") as HTMLInputElement;
 
-rom_input.addEventListener('change', () => {
+rom_input.addEventListener('change', function() {
 	const reader = new FileReader();
 
-	reader.onload = () => {
-		console.log(reader.result)
+	reader.onload = function() {
+		if(reader.result) emulate_nes_rom(this.result as ArrayBuffer);
 	};
 
-	if(rom_input.files) reader.readAsArrayBuffer(rom_input.files[0]);
+	if(this.files) reader.readAsArrayBuffer(this.files[0]);
 }, false);
