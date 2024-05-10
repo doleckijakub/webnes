@@ -14,10 +14,28 @@ interface NES_Emulator {
 	heap_reset: heap_reset_t;
 }
 
+function puts(ptr: pointer) {
+	nes_emulator.then(_nes_emulator => {
+		const memory = _nes_emulator.memory;
+		const buffer = new Uint8Array(memory.buffer);
+
+		let str = '';
+		let index = ptr;
+
+		while (buffer[index] !== 0) {
+			str += String.fromCharCode(buffer[index]);
+			index++;
+		}
+
+		console.log(str);
+	});
+}
+
 const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
-			putd: console.log
+			putd: console.log,
+			puts: puts
 		}
 	})
 .then(w => {

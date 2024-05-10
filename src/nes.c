@@ -2,8 +2,6 @@
 
 #include "libc.h"
 
-void putd(int);
-
 nes *nes_create() {
 	nes *nes_p = malloc(sizeof(nes));
 	nes_p->cpu = r6502_create(nes_p);
@@ -25,6 +23,9 @@ uint8_t nes_read(nes *nes_p, uint16_t address) {
 }
 
 void emulate_nes_rom(void *rom, size_t rom_size) {
+	puts("Hello, World!");
+	puts("test");
+
 	nes *nes_p = nes_create();
 
 	size_t offset = 0x8000;
