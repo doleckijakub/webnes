@@ -12,6 +12,9 @@ typedef struct nes {
 	uint8_t ram[64 * 1024];
 } nes;
 
+nes *nes_create();
+void nes_restroy(nes*);
+
 void nes_write(nes*, uint16_t address, uint8_t value);
 uint8_t nes_read(nes*, uint16_t address);
 
