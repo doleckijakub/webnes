@@ -17,13 +17,13 @@ interface NES_Emulator {
 const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
-			putd: alert
+			putd: console.log
 		}
 	})
 .then(w => {
 	const memory = w.instance.exports.memory as WebAssembly.Memory;
 
-	// TODO: memory.grow when needed
+	memory.grow(1);
 		
 	return {
 		memory,
