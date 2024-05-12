@@ -8,9 +8,12 @@ void free(void*);
 
 void memset(void*, char, size_t);
 
-void putd(int);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+
+void console_log();
 void puts(char *);
 
-void printf(const char *format, ...);
+#pragma clang diagnostic pop
 
 #endif

@@ -38,5 +38,5 @@ void emulate_nes_rom(void *rom, size_t rom_size) {
 
 	r6502_reset(&nes_p->cpu);
 
-	putd(0);
+	console_log(0, 69, 420);
 }

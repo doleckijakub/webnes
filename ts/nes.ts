@@ -34,7 +34,7 @@ function puts(ptr: pointer) {
 const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
-			putd: console.log,
+			console_log: console.log,
 			puts: puts
 		}
 	})
