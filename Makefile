@@ -1,7 +1,9 @@
 .PHONY: serve clean
 
+HOST_PORT ?= 8080
+
 serve: wasm/nes32.wasm js/nes.js index.html
-	python3 -m http.server 8080
+	python3 -m http.server $(HOST_PORT)
 
 js/nes.js: ts/nes.ts
 	@mkdir -p js
