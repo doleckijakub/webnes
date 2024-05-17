@@ -5,7 +5,7 @@ HOST_PORT ?= 8080
 serve: wasm/nes32.wasm js/nes.js index.html
 	python3 -m http.server $(HOST_PORT)
 
-js/nes.js: ts/nes.ts
+js/nes.js: ts/nes.ts tsconfig.json
 	@mkdir -p js
 	tsc
 
