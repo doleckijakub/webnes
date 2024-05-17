@@ -6,6 +6,7 @@
     "outDir": "./js/",
     "esModuleInterop": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": ["ES2015", "DOM"]
   }
 }

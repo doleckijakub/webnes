@@ -24,7 +24,8 @@ uint8_t nes_read(nes *nes_p, uint16_t address) {
 
 void emulate_nes_rom(void *rom, size_t rom_size) {
 	puts("Hello, World!");
-	puts("test");
+	printfln("Test %d %d %d", 1, 2, 3);
+	printfln("Second test %d %d %d", 4, 2, 0);
 
 	nes *nes_p = nes_create();
 
@@ -37,6 +38,4 @@ void emulate_nes_rom(void *rom, size_t rom_size) {
 	nes_p->ram[0xFFFD] = 0x80;
 
 	r6502_reset(&nes_p->cpu);
-
-	console_log(0, 69, 420);
 }

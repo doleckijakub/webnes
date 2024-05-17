@@ -14,28 +14,30 @@ interface NES_Emulator {
 	heap_reset: heap_reset_t;
 }
 
-function puts(ptr: pointer) {
-	nes_emulator.then(_nes_emulator => {
-		const memory = _nes_emulator.memory;
-		const buffer = new Uint8Array(memory.buffer);
+(async () => {
 
-		let str = '';
-		let index = ptr;
-
-		while (buffer[index] !== 0) {
-			str += String.fromCharCode(buffer[index]);
-			index++;
-		}
-
-		console.log(str);
-	});
+let uint8_view: undefined | Uint8Array = undefined;
+function get_uint8_view() {
+	return uint8_view || (uint8_view = new Uint8Array(nes_emulator.memory.buffer));
 }
 
-const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
+const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
 			console_log: console.log,
-			puts: puts
+			puts: (ptr: pointer) => {
+				const buffer = get_uint8_view();
+
+				let str = '';
+				let index = ptr;
+
+				while (buffer[index] !== 0) {
+					str += String.fromCharCode(buffer[index]);
+					index++;
+				}
+
+				console.log(str);
+			}
 		}
 	})
 .then(w => {
@@ -52,18 +54,16 @@ const nes_emulator: Promise<NES_Emulator> = WebAssembly.instantiateStreaming(
 });
 
 function emulate_nes_rom(rom_data: ArrayBuffer): any {
-	nes_emulator.then(_nes_emulator => {
-		_nes_emulator.heap_reset();
+	nes_emulator.heap_reset();
 
-		const buffer = new Uint8Array(rom_data);
+	const buffer = new Uint8Array(rom_data);
 
-		const len = buffer.length;
-		const buf = _nes_emulator.malloc(len);
+	const len = buffer.length;
+	const buf = nes_emulator.malloc(len);
 
-		new Uint8Array(_nes_emulator.memory.buffer, buf, len).set(buffer);
+	new Uint8Array(nes_emulator.memory.buffer, buf, len).set(buffer);
 
-		_nes_emulator.emulate_nes_rom(buf, len);
-	});
+	nes_emulator.emulate_nes_rom(buf, len);
 }
 
 const rom_input = document.getElementById("rom") as HTMLInputElement;
@@ -77,3 +77,5 @@ rom_input.addEventListener('change', function() {
 
 	if(this.files) reader.readAsArrayBuffer(this.files[0]);
 }, false);
+
+})();
