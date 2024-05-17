@@ -24,7 +24,6 @@ function get_uint8_view() {
 const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
-			console_log: console.log,
 			puts: (ptr: pointer) => {
 				const buffer = get_uint8_view();
 
