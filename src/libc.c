@@ -38,12 +38,12 @@ static void append_char(char *str, size_t size, size_t *index, char c) {
 }
 
 static void vsnprintf(char *str, size_t size, const char *format, va_list args) {
-	int index = 0;
+	size_t index = 0;
 	const char *fmt = format;
 
 	while (*fmt) {
 		if (*fmt == '%') {
-			*fmt++;
+			(void) *fmt++;
 			switch (*fmt) {
 				case 'd': {
 					static char d[20];
@@ -63,6 +63,20 @@ static void vsnprintf(char *str, size_t size, const char *format, va_list args) 
 
 					for (int j = i - 1; j >= 0; j--) {
 						append_char(str, size, &index, d[j]);
+					}
+				} break;
+				case 'p': {
+					static char p[20];
+					static const char *x = "0123456789abcdef";
+
+					intptr_t n = va_arg(args, intptr_t);
+
+					append_char(str, size, &index, '0');
+					append_char(str, size, &index, 'x');
+
+					for (int i = 7; i >= 0; i--) {
+						int h = (n >> (i * 4)) & 0xF;
+						append_char(str, size, &index, x[h]);
 					}
 				} break;
 				case 's': {

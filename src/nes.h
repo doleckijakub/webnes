@@ -10,6 +10,7 @@ typedef struct nes {
 	// TODO: ntsc2C02 ppu;
 	// TODO: ricoh2A03 apu;
 	uint8_t ram[64 * 1024];
+	bool keys[8];
 } nes;
 
 nes *nes_create();
