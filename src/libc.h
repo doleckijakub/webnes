@@ -11,4 +11,6 @@ void memset(void*, char, size_t);
 void puts(char *);
 void printfln(const char *, ...);
 
+int rand();
+
 #endif

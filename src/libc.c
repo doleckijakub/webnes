@@ -113,3 +113,10 @@ void printfln(const char *format, ...) {
 	va_end(args);
 	puts(buf);
 }
+
+int rand_n = 1;
+
+int rand() {
+	rand_n = rand_n * 1103515245 + 12345;
+	return (unsigned int) (rand_n / 65536) % 32768;
+}

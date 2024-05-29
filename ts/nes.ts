@@ -12,7 +12,7 @@ type init_nes_t = () => void;
 type load_nes_rom_t = (rom_start: pointer, rom_size: number) => void;
 type get_nes_framebuffer_t = () => pointer;
 type emulate_nes_frame_t = () => void;
-type set_nes_key_state_t = (key: number, pressed: bool) => void;
+type set_nes_key_state_t = (key: number, pressed: boolean) => void;
 
 type any_to_any_t = (...args: any[]) => any;
 
@@ -81,13 +81,16 @@ const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 });
 
 function update_canvas() {
-	const framebuffer_ptr = nes_emulator.get_framebuffer();
+	const framebuffer_ptr = nes_emulator.get_nes_framebuffer();
 	const framebuffer = new Uint8Array(nes_emulator.memory.buffer, framebuffer_ptr, FRAMEBUFFER_SIZE);
 	canvas_image_data.data.set(framebuffer);
-	canvas_ctx.putImageData(canvas_image_data, 0, 0);
+	canvas_ctx!.putImageData(canvas_image_data, 0, 0);
 }
 
 function load_nes_rom(rom_data: ArrayBuffer) {
+	rom_input.style.display = "none";
+	canvas.style.display = "";
+
 	nes_emulator.heap_reset();
 
 	const buffer = new Uint8Array(rom_data);
@@ -100,13 +103,26 @@ function load_nes_rom(rom_data: ArrayBuffer) {
 	nes_emulator.load_nes_rom(buf, len);
 }
 
+function start_emulation() {
+	function emulation_loop() {
+		console.log("emulation_loop");
+		nes_emulator.emulate_nes_frame();
+		update_canvas();
+		requestAnimationFrame(emulation_loop);
+	}
+	requestAnimationFrame(emulation_loop);
+}
+
 nes_emulator.init_nes();
 
 rom_input.addEventListener('change', function() {
 	const reader = new FileReader();
 
 	reader.onload = function() {
-		if(reader.result) load_nes_rom(this.result as ArrayBuffer);
+		if(reader.result) {
+			load_nes_rom(this.result as ArrayBuffer);
+			start_emulation();
+		}
 	};
 
 	if(this.files) reader.readAsArrayBuffer(this.files[0]);

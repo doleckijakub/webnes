@@ -1,47 +1,45 @@
 #include "r6502.h"
 
-r6502 r6502_create(nes *nes_p) {
-	return (r6502) {
-		.nes_p = nes_p
-	};
+#include "libc.h"
+
+#include "nes.h"
+
+static uint8_t a, x, y;
+static uint8_t sp, st;
+static uint16_t pc;
+static uint8_t fetched, opcode, cycles;
+static uint16_t temp, abs_addr, rel_addr, clock_count;
+
+void r6502_init() {
+	r6502_reset();
 }
 
-void r6502_destroy(r6502 *cpu) {
+void r6502_reset() {
+	abs_addr = 0xFFFC;
+	pc = nes_read_u16(abs_addr);
 
+	a = 0;
+	x = 0;
+	y = 0;
+	sp = 0;
+	st = R6502_F_U;
+
+	rel_addr = 0;
+	abs_addr = 0;
+	fetched = 0;
+
+	cycles = 8;
 }
 
-uint8_t r6502_read(r6502 *cpu, uint16_t address) {
-	return nes_read(cpu->nes_p, address);
+void r6502_irq() {
+	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
 }
 
-void r6502_reset(r6502 *cpu) {
-	cpu->abs_addr = 0xFFFC;
-	uint16_t lo = r6502_read(cpu, cpu->abs_addr + 0);
-	uint16_t hi = r6502_read(cpu, cpu->abs_addr + 1);
-	cpu->pc = (hi << 8) | lo;
-
-	cpu->a = 0;
-	cpu->x = 0;
-	cpu->y = 0;
-	cpu->sp = 0;
-	cpu->st = R6502_F_U;
-
-	cpu->rel_addr = 0;
-	cpu->abs_addr = 0;
-	cpu->fetched = 0;
-
-	cpu->cycles = 8;
+void r6502_nmi() {
+	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
 }
 
-void r6502_irq(r6502 *cpu) {
-
-}
-
-void r6502_nmi(r6502 *cpu) {
-
-}
-
-void r6502_clock(r6502 *cpu) {
-
+void r6502_clk() {
+	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
 }
 
