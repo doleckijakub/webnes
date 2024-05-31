@@ -11,9 +11,9 @@
 
 void nes_init() {
 	ram_init();
-	r6502_init();
-	ntsc2C02_init();
-	ricoh2A03_init();
+	r6502_init(); // cpu
+	ntsc2C02_init(); // ppu
+	ricoh2A03_init(); // apu
 	controller_init();
 }
 
@@ -41,4 +41,8 @@ uint8_t *get_nes_framebuffer() {
 
 void emulate_nes_frame() {
 	ntsc2C02_set_random();
+}
+
+void set_nes_key_state(uint8_t controller, Key key, bool pressed) {
+	controller_set_key_state(controller, key, pressed);
 }

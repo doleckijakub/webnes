@@ -2,16 +2,20 @@
 
 #include "libc.h"
 
-static bool keys[8];
+static uint8_t controllers[2];
 
 void controller_init() {
-    memset(&keys, 0, 8);
+    memset(&controllers, 0, 2);
 }
 
-void controller_set_key_state(uint8_t key, bool pressed) {
-	keys[key] = pressed;
-}
+void controller_set_key_state(uint8_t controller, Key key, bool pressed) {
+	printfln("%s: controller: %d, key: %d, pressed: %s", __func__, controller, key, pressed ? "true" : "false");
+	
+	if (pressed) {
+		controllers[controller] |= key;
+	} else {
+		controllers[controller] &= ~key;
+	}
 
-bool controller_get_key_state(uint8_t key) {
-	return keys[key];
+	// printfln("controllers[%d] = %d", controller, controllers[controller]);
 }

@@ -3,6 +3,30 @@ const FRAMEBUFFER_WIDTH = 256;
 const FRAMEBUFFER_HEIGHT = 240;
 const FRAMEBUFFER_SIZE = FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * 4;
 
+const KEY_A      = 0x80;
+const KEY_B      = 0x40;
+const KEY_SELECT = 0x20;
+const KEY_START  = 0x10;
+const KEY_UP     = 0x08;
+const KEY_DOWN   = 0x04;
+const KEY_LEFT   = 0x02;
+const KEY_RIGHT  = 0x01;
+
+type KeyControllerMapping_t = {
+	[key: string]: [number, number]
+}
+
+const KEY_CONTROLLER_MAPPINGS: KeyControllerMapping_t = {
+	'KeyX': [ 0, KEY_A ],
+	'KeyZ': [ 0, KEY_B ],
+	'KeyQ': [ 0, KEY_SELECT ],
+	'KeyE': [ 0, KEY_START ],
+	'KeyW': [ 0, KEY_UP ],
+	'KeyS': [ 0, KEY_DOWN ],
+	'KeyA': [ 0, KEY_LEFT ],
+	'KeyD': [ 0, KEY_RIGHT ],
+}
+
 type pointer = number;
 
 type malloc_t = (size: number) => pointer;
@@ -12,7 +36,7 @@ type init_nes_t = () => void;
 type load_nes_rom_t = (rom_start: pointer, rom_size: number) => void;
 type get_nes_framebuffer_t = () => pointer;
 type emulate_nes_frame_t = () => void;
-type set_nes_key_state_t = (key: number, pressed: boolean) => void;
+type set_nes_key_state_t = (controller: number, key: number, pressed: boolean) => void;
 
 type any_to_any_t = (...args: any[]) => any;
 
@@ -127,5 +151,17 @@ rom_input.addEventListener('change', function() {
 
 	if(this.files) reader.readAsArrayBuffer(this.files[0]);
 }, false);
+
+document.addEventListener('keydown', function(e) {
+	const mapping = KEY_CONTROLLER_MAPPINGS[e.code];
+	if (!mapping) return;
+	nes_emulator.set_nes_key_state(mapping[0], mapping[1], true);
+});
+
+document.addEventListener('keyup', function(e) {
+	const mapping = KEY_CONTROLLER_MAPPINGS[e.code];
+	if (!mapping) return;
+	nes_emulator.set_nes_key_state(mapping[0], mapping[1], false);
+});
 
 })();
