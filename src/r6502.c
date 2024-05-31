@@ -2,7 +2,7 @@
 
 #include "libc.h"
 
-#include "nes.h"
+#include "ram.h"
 
 static uint8_t a, x, y;
 static uint8_t sp, st;
@@ -16,7 +16,7 @@ void r6502_init() {
 
 void r6502_reset() {
 	abs_addr = 0xFFFC;
-	pc = nes_read_u16(abs_addr);
+	pc = ram_read_u16(abs_addr);
 
 	a = 0;
 	x = 0;
