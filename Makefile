@@ -17,13 +17,13 @@ wasm/nes32.wasm: $(SOURCE_FILES)
 	--target=wasm32 \
 	-fno-builtin \
 	--no-standard-libraries \
-	-Wl,--export=init_nes \
-	-Wl,--export=load_nes_rom \
-	-Wl,--export=get_nes_framebuffer \
-	-Wl,--export=emulate_nes_frame \
-	-Wl,--export=set_nes_key_state \
+	-Wl,--export=nes_init \
+	-Wl,--export=nes_load_rom \
+	-Wl,--export=nes_get_framebuffer \
+	-Wl,--export=nes_emulate_frame \
+	-Wl,--export=nes_set_key_state \
 	-Wl,--export=malloc \
-	-Wl,--export=heap_reset \
+	-Wl,--export=__heap_reset \
 	-Wl,--allow-undefined \
 	-Wl,--no-entry \
 	-I./src/ \

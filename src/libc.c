@@ -5,7 +5,7 @@
 extern char __heap_base;
 static char *bump = &__heap_base;
 
-void heap_reset(void) {
+void __heap_reset(void) {
 	bump = &__heap_base;
 }
 

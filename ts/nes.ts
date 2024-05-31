@@ -30,13 +30,13 @@ const KEY_CONTROLLER_MAPPINGS: KeyControllerMapping_t = {
 type pointer = number;
 
 type malloc_t = (size: number) => pointer;
-type heap_reset_t = () => void;
+type __heap_reset_t = () => void;
 
-type init_nes_t = () => void;
-type load_nes_rom_t = (rom_start: pointer, rom_size: number) => void;
-type get_nes_framebuffer_t = () => pointer;
-type emulate_nes_frame_t = () => void;
-type set_nes_key_state_t = (controller: number, key: number, pressed: boolean) => void;
+type nes_init_t = () => void;
+type nes_load_rom_t = (rom_start: pointer, rom_size: number) => void;
+type nes_get_framebuffer_t = () => pointer;
+type nes_emulate_frame_t = () => void;
+type nes_set_key_state_t = (controller: number, key: number, pressed: boolean) => void;
 
 type any_to_any_t = (...args: any[]) => any;
 
@@ -44,13 +44,13 @@ interface NES_Emulator {
 	memory: WebAssembly.Memory;
 	
 	malloc: malloc_t;
-	heap_reset: heap_reset_t;
+	__heap_reset: __heap_reset_t;
 
-	init_nes: init_nes_t;
-	load_nes_rom: load_nes_rom_t;
-	get_nes_framebuffer: get_nes_framebuffer_t;
-	emulate_nes_frame: emulate_nes_frame_t;
-	set_nes_key_state: set_nes_key_state_t;
+	nes_init: nes_init_t;
+	nes_load_rom: nes_load_rom_t;
+	nes_get_framebuffer: nes_get_framebuffer_t;
+	nes_emulate_frame: nes_emulate_frame_t;
+	nes_set_key_state: nes_set_key_state_t;
 }
 
 (async () => {
@@ -94,28 +94,28 @@ const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 		memory,
 
 		malloc: iexports.malloc as malloc_t,
-		heap_reset: iexports.heap_reset as heap_reset_t,
+		__heap_reset: iexports.__heap_reset as __heap_reset_t,
 
-		init_nes: iexports.init_nes as init_nes_t,
-		load_nes_rom: iexports.load_nes_rom as load_nes_rom_t,
-		get_nes_framebuffer: iexports.get_nes_framebuffer as get_nes_framebuffer_t,
-		emulate_nes_frame: iexports.emulate_nes_frame as emulate_nes_frame_t,
-		set_nes_key_state: iexports.set_nes_key_state as set_nes_key_state_t,
+		nes_init: iexports.nes_init as nes_init_t,
+		nes_load_rom: iexports.nes_load_rom as nes_load_rom_t,
+		nes_get_framebuffer: iexports.nes_get_framebuffer as nes_get_framebuffer_t,
+		nes_emulate_frame: iexports.nes_emulate_frame as nes_emulate_frame_t,
+		nes_set_key_state: iexports.nes_set_key_state as nes_set_key_state_t,
 	};
 });
 
 function update_canvas() {
-	const framebuffer_ptr = nes_emulator.get_nes_framebuffer();
+	const framebuffer_ptr = nes_emulator.nes_get_framebuffer();
 	const framebuffer = new Uint8Array(nes_emulator.memory.buffer, framebuffer_ptr, FRAMEBUFFER_SIZE);
 	canvas_image_data.data.set(framebuffer);
 	canvas_ctx!.putImageData(canvas_image_data, 0, 0);
 }
 
-function load_nes_rom(rom_data: ArrayBuffer) {
+function nes_load_rom(rom_data: ArrayBuffer) {
 	rom_input.style.display = "none";
 	canvas.style.display = "";
 
-	nes_emulator.heap_reset();
+	nes_emulator.__heap_reset();
 
 	const buffer = new Uint8Array(rom_data);
 
@@ -124,27 +124,27 @@ function load_nes_rom(rom_data: ArrayBuffer) {
 
 	new Uint8Array(nes_emulator.memory.buffer, buf, len).set(buffer);
 
-	nes_emulator.load_nes_rom(buf, len);
+	nes_emulator.nes_load_rom(buf, len);
 }
 
 function start_emulation() {
 	function emulation_loop() {
 		console.log("emulation_loop");
-		nes_emulator.emulate_nes_frame();
+		nes_emulator.nes_emulate_frame();
 		update_canvas();
 		requestAnimationFrame(emulation_loop);
 	}
 	requestAnimationFrame(emulation_loop);
 }
 
-nes_emulator.init_nes();
+nes_emulator.nes_init();
 
 rom_input.addEventListener('change', function() {
 	const reader = new FileReader();
 
 	reader.onload = function() {
 		if(reader.result) {
-			load_nes_rom(this.result as ArrayBuffer);
+			nes_load_rom(this.result as ArrayBuffer);
 			start_emulation();
 		}
 	};
@@ -155,13 +155,13 @@ rom_input.addEventListener('change', function() {
 document.addEventListener('keydown', function(e) {
 	const mapping = KEY_CONTROLLER_MAPPINGS[e.code];
 	if (!mapping) return;
-	nes_emulator.set_nes_key_state(mapping[0], mapping[1], true);
+	nes_emulator.nes_set_key_state(mapping[0], mapping[1], true);
 });
 
 document.addEventListener('keyup', function(e) {
 	const mapping = KEY_CONTROLLER_MAPPINGS[e.code];
 	if (!mapping) return;
-	nes_emulator.set_nes_key_state(mapping[0], mapping[1], false);
+	nes_emulator.nes_set_key_state(mapping[0], mapping[1], false);
 });
 
 })();

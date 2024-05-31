@@ -1,6 +1,5 @@
 #include "nes.h"
 
-#include "inttypes.h"
 #include "libc.h"
 
 #include "ram.h"
@@ -17,9 +16,7 @@ void nes_init() {
 	controller_init();
 }
 
-void init_nes() { nes_init(); } // TODO: remove
-
-void load_nes_rom(void *rom, size_t rom_size) {
+void nes_load_rom(void *rom, size_t rom_size) {
 	printfln(__func__);
 
 	size_t offset = 0x8000;
@@ -35,14 +32,14 @@ void load_nes_rom(void *rom, size_t rom_size) {
 	printfln("~%s", __func__);
 }
 
-uint8_t *get_nes_framebuffer() {
+uint8_t *nes_get_framebuffer() {
 	return ntsc2C02_get_framebuffer();
 }
 
-void emulate_nes_frame() {
+void nes_emulate_frame() {
 	ntsc2C02_set_random();
 }
 
-void set_nes_key_state(uint8_t controller, Key key, bool pressed) {
+void nes_set_key_state(uint8_t controller, Key key, bool pressed) {
 	controller_set_key_state(controller, key, pressed);
 }
