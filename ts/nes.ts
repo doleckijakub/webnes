@@ -87,6 +87,7 @@ const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 			wputs: (ptr: pointer) => log_cstring(ptr, console.warn),
 			eputs: (ptr: pointer) => log_cstring(ptr, console.error),
 			tputs: (ptr: pointer) => log_cstring(ptr, console.trace),
+			'throw': (ptr: pointer) => log_cstring(ptr, err => { throw new Error(err) }),
 		}
 	})
 .then(w => {

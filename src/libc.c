@@ -120,6 +120,7 @@ DEFINE_XPRINTFLN_FUNC(printfln, puts)
 DEFINE_XPRINTFLN_FUNC(wprintfln, wputs)
 DEFINE_XPRINTFLN_FUNC(eprintfln, eputs)
 DEFINE_XPRINTFLN_FUNC(tprintfln, tputs)
+DEFINE_XPRINTFLN_FUNC(throwf, throw)
 
 int rand_n = 1;
 

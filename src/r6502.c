@@ -1,7 +1,7 @@
 #include "r6502.h"
 
 #include "libc.h"
-
+#include "instruction.h"
 #include "ram.h"
 
 // static variables
@@ -12,7 +12,29 @@ static uint16_t pc; // program counter
 static uint8_t fetched, opcode, cycles; // alu input, instruction, clock cycles required for operation
 static uint16_t temp, abs_addr, rel_addr, clock_count; // often used help variable, absolute address, relative address, global clock counter
 
-#include "instruction.h"
+static Instruction instructions[];
+
+// static functions
+
+static uint8_t fetch(void) {
+	if (instructions[opcode].mode != IM_IMP) {
+		fetched = ram_read_u8(abs_addr);
+	}
+
+	return fetched;
+}
+
+static bool get_flag(int flag) {
+	return (st & flag) ? 1 : 0;
+}
+
+static void set_flag(int flag, bool value) {
+	if (value) {
+		st |= value;
+	} else {
+		st &= ~value;
+	}
+}
 
 // instruction modes
 
@@ -79,14 +101,55 @@ static uint8_t im(InstructionMode mode) { // instruction modes
 // processor instructions
 
 #define UNIMPLEMENTED_PROCESSOR_INSTRUCTION() do { \
-	UNIMPLEMENTED(); \
+	throwf("unimplemented instruction: %s", __func__); \
 	return 0; \
 } while (0)
 
-static uint8_t BRK(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t ORA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t NOP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t ASL(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+static uint8_t BRK(void) {
+	++pc;
+	
+	set_flag(R6502_F_I, true);
+	ram_write_u8(0x0100 + sp--, (pc >> 8) & 0x00FF); // TODO: use ram_read_u16
+	ram_write_u8(0x0100 + sp--, pc & 0x00FF);
+
+	set_flag(R6502_F_B, true);
+	ram_write_u8(0x0100 + sp--, st);
+	set_flag(R6502_F_B, false);
+
+	pc = ram_read_u16(0xFFFE);
+
+	return 0;
+}
+
+static uint8_t ORA(void) {
+	a |= fetch();
+
+	set_flag(R6502_F_Z, a == 0);
+	set_flag(R6502_F_N, a & 0x80);
+
+	return 1;
+}
+
+static uint8_t NOP(void) {
+	return 0;
+}
+
+static uint8_t ASL(void) {
+	temp = (uint16_t) fetch() << 1;
+
+	set_flag(R6502_F_C, (temp & 0xFF00) > 0);
+	set_flag(R6502_F_Z, (temp & 0x00FF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+
+	if (instructions[opcode].mode == IM_IMP) {
+		a = temp & 0xFF;
+	} else {
+		ram_write_u8(abs_addr, temp & 0xFF);
+	}
+
+	return 0;
+}
+
 static uint8_t PHP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t BPL(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t CLC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -99,7 +162,25 @@ static uint8_t BMI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t SEC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t RTI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t EOR(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t LSR(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t LSR(void) {
+	fetch();
+
+	set_flag(R6502_F_C, fetched & 1);
+	temp = fetched >> 1;
+
+	set_flag(R6502_F_Z, (temp & 0xFF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+
+	if (instructions[opcode].mode == IM_IMP) {
+		a = temp & 0xFF;
+	} else {
+		ram_write_u8(abs_addr, temp & 0xFF);
+	}
+
+	return 0;
+}
+
 static uint8_t PHA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t JMP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t BVC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -126,7 +207,19 @@ static uint8_t TAX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t BCS(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t CLV(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t TSX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t CPY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t CPY(void) {
+	fetch();
+
+	temp = (uint16_t) y - (uint16_t) fetched;
+
+	set_flag(R6502_F_C, y >= fetched);
+	set_flag(R6502_F_Z, (temp & 0xFF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+
+	return 0;
+}
+
 static uint8_t CMP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t DEC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t INY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -403,20 +496,6 @@ static Instruction instructions[] = {
 	(Instruction) { "---", NUL, IM_IMP, 7 }
 };
 
-// static functions
-
-static bool get_flag(int flag) {
-	return (st & flag) ? 1 : 0;
-}
-
-static void set_flag(int flag, bool value) {
-	if (value) {
-		st |= value;
-	} else {
-		st &= ~value;
-	}
-}
-
 // public functions
 
 void r6502_init() {
@@ -469,7 +548,7 @@ void r6502_clk() {
 
 		Instruction ins = instructions[opcode];
 
-		tprintfln("%s:%d: opcode = %d, ins = { name = %s, cycles = %d, operand: %p, mode: %s }", __FILE__, __LINE__, opcode, ins.name, ins.cycles, ins.operand, instruction_mode_to_string(ins.mode));
+		printfln("%s:%d: opcode = %d, ins = { name = %s, cycles = %d, operand: %p, mode: %s }", __FILE__, __LINE__, opcode, ins.name, ins.cycles, ins.operand, instruction_mode_to_string(ins.mode));
 
 		cycles = ins.cycles;
 
