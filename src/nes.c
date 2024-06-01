@@ -24,7 +24,7 @@ void nes_load_rom(void *rom, size_t rom_size) {
 		ram_write_u8(offset++, ((uint8_t*) rom)[i]);
 	}
 
-	ram_write_u8(0xFFFC, 0x80);
+	ram_write_u8(0xFFFC, 0x00);
 	ram_write_u8(0xFFFD, 0x80);
 
 	r6502_reset();
