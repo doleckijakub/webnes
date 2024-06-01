@@ -36,25 +36,14 @@ uint8_t *nes_get_framebuffer() {
 	return ntsc2C02_get_framebuffer();
 }
 
-static uint8_t _was_key_pressed[2];
-
-static bool was_key_pressed(uint8_t controller, Key key) {
-	return _was_key_pressed[controller] & key;
-}
-
 void nes_emulate_frame() {
-	if (was_key_pressed(0, KEY_A)) {
-		do {
-			r6502_clk();
-		} while (!r6502_complete());
+	do {
+		r6502_clk();
+	} while (!r6502_complete());
 
-		// ntsc2C02_set_random();
-	}
-
-	memset(_was_key_pressed, 0, 2);
+	// ntsc2C02_set_random();
 }
 
 void nes_set_key_state(uint8_t controller, Key key, bool pressed) {
-	if (pressed) _was_key_pressed[controller] |= key;
 	controller_set_key_state(controller, key, pressed);
 }
