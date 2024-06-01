@@ -9,7 +9,7 @@ void controller_init() {
 }
 
 void controller_set_key_state(uint8_t controller, Key key, bool pressed) {
-	printfln("%s: controller: %d, key: %d, pressed: %s", __func__, controller, key, pressed ? "true" : "false");
+	// printfln("%s: controller: %d, key: %d, pressed: %s", __func__, controller, key, pressed ? "true" : "false");
 	
 	if (pressed) {
 		controllers[controller] |= key;

@@ -5,7 +5,7 @@
 static uint8_t framebuffer[FRAMEBUFFER_SIZE];
 
 void ntsc2C02_init() {
-	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
+	memset(framebuffer, 0xFF, FRAMEBUFFER_SIZE);
 }
 
 uint8_t *ntsc2C02_get_framebuffer() {
