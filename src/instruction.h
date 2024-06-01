@@ -18,6 +18,8 @@ typedef enum {
 	IM_IZY, // indirect y
 } InstructionMode;
 
+const char *instruction_mode_to_string(InstructionMode mode);
+
 typedef struct {
 	const char *name;
 	uint8_t (*operand)(void);
