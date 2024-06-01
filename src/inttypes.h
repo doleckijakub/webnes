@@ -8,7 +8,9 @@ typedef uint32_t size_t;
 
 typedef uint8_t bool;
 
-static bool true = 1;
-static bool false = 0;
+#define true  1
+#define false 0
 
 typedef uint32_t intptr_t;
+
+#define NULL 0

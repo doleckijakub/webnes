@@ -1,6 +1,8 @@
 #ifndef R6502_H
 #define R6502_H
 
+#include "inttypes.h"
+
 // All technical data taken from the official datasheet at http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
 
 enum {
@@ -19,5 +21,7 @@ void r6502_reset();
 void r6502_irq();
 void r6502_nmi();
 void r6502_clk();
+
+bool r6502_complete();
 
 #endif
