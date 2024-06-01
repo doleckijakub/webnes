@@ -105,14 +105,21 @@ static void vsnprintf(char *str, size_t size, const char *format, va_list args) 
 	}
 }
 
-void printfln(const char *format, ...) {
-	static char buf[256];
-	va_list args;
-	va_start(args, format);
-	vsnprintf(buf, 256, format, args);
-	va_end(args);
-	puts(buf);
-}
+static char output_buffer[256];
+
+#define DEFINE_XPRINTFLN_FUNC(name, output_method) \
+	void name(const char *format, ...) { \
+		va_list args; \
+		va_start(args, format); \
+		vsnprintf(output_buffer, sizeof(output_buffer), format, args); \
+		va_end(args); \
+		output_method(output_buffer); \
+	}
+
+DEFINE_XPRINTFLN_FUNC(printfln, puts)
+DEFINE_XPRINTFLN_FUNC(wprintfln, wputs)
+DEFINE_XPRINTFLN_FUNC(eprintfln, eputs)
+DEFINE_XPRINTFLN_FUNC(tprintfln, tputs)
 
 int rand_n = 1;
 

@@ -17,7 +17,7 @@ uint8_t ram_read_u8(uint16_t address) {
 }
 
 void ram_write_u16(uint16_t address, uint16_t value) {
-	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
+	UNIMPLEMENTED();
 }
 
 uint16_t ram_read_u16(uint16_t address) {

@@ -17,7 +17,7 @@ void nes_init() {
 }
 
 void nes_load_rom(void *rom, size_t rom_size) {
-	printfln(__func__);
+	tprintfln(__func__);
 
 	size_t offset = 0x8000;
 	for (size_t i = 0; i < rom_size; i++) {
@@ -29,7 +29,7 @@ void nes_load_rom(void *rom, size_t rom_size) {
 
 	r6502_reset();
 
-	printfln("~%s", __func__);
+	tprintfln("~%s", __func__);
 }
 
 uint8_t *nes_get_framebuffer() {

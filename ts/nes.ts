@@ -38,7 +38,7 @@ type nes_get_framebuffer_t = () => pointer;
 type nes_emulate_frame_t = () => void;
 type nes_set_key_state_t = (controller: number, key: number, pressed: boolean) => void;
 
-type any_to_any_t = (...args: any[]) => any;
+type logger_t = typeof console.log;
 
 interface NES_Emulator {
 	memory: WebAssembly.Memory;
@@ -66,22 +66,27 @@ function get_uint8_view() {
 	return uint8_view || (uint8_view = new Uint8Array(nes_emulator.memory.buffer));
 }
 
+function log_cstring(ptr: pointer, logger: logger_t) {
+	const buffer = get_uint8_view();
+
+	let str = '';
+	let index = ptr;
+
+	while (buffer[index] !== 0) {
+		str += String.fromCharCode(buffer[index]);
+		index++;
+	}
+
+	logger(str);
+}
+
 const nes_emulator: NES_Emulator = await WebAssembly.instantiateStreaming(
 	fetch(NES32_WASM_PATH), {
 		env: {
-			puts: (ptr: pointer) => {
-				const buffer = get_uint8_view();
-
-				let str = '';
-				let index = ptr;
-
-				while (buffer[index] !== 0) {
-					str += String.fromCharCode(buffer[index]);
-					index++;
-				}
-
-				console.log(str);
-			}
+			puts:  (ptr: pointer) => log_cstring(ptr, console.log),
+			wputs: (ptr: pointer) => log_cstring(ptr, console.warn),
+			eputs: (ptr: pointer) => log_cstring(ptr, console.error),
+			tputs: (ptr: pointer) => log_cstring(ptr, console.trace),
 		}
 	})
 .then(w => {

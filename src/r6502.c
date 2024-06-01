@@ -79,7 +79,7 @@ static uint8_t im(InstructionMode mode) { // instruction modes
 // processor instructions
 
 #define UNIMPLEMENTED_PROCESSOR_INSTRUCTION() do { \
-	printfln("warning: %s:%d: unimplemented processor instruction: %s", __FILE__, __LINE__, __func__); \
+	UNIMPLEMENTED(); \
 	return 0; \
 } while (0)
 
@@ -454,11 +454,11 @@ void r6502_reset() {
 }
 
 void r6502_irq() {
-	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
+	UNIMPLEMENTED();
 }
 
 void r6502_nmi() {
-	printfln("%s@%s:%d unimplemented", __func__, __FILE__, __LINE__);
+	UNIMPLEMENTED();
 }
 
 void r6502_clk() {
@@ -469,7 +469,7 @@ void r6502_clk() {
 
 		Instruction ins = instructions[opcode];
 
-		printfln("%s:%d: opcode = %d, ins = { name = %s, cycles = %d, operand: %p, mode: %s }", __FILE__, __LINE__, opcode, ins.name, ins.cycles, ins.operand, instruction_mode_to_string(ins.mode));
+		tprintfln("%s:%d: opcode = %d, ins = { name = %s, cycles = %d, operand: %p, mode: %s }", __FILE__, __LINE__, opcode, ins.name, ins.cycles, ins.operand, instruction_mode_to_string(ins.mode));
 
 		cycles = ins.cycles;
 
