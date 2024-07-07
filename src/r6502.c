@@ -151,7 +151,20 @@ static uint8_t ASL(void) {
 }
 
 static uint8_t PHP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t BPL(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t BPL(void) {
+	if (!get_flag(R6502_F_N)) {
+		++cycles;
+		abs_addr = pc + rel_addr;
+
+		if ((abs_addr & 0xFF00) != (pc & 0xFF00)) ++cycles;
+
+		pc = abs_addr;
+	}
+
+	return 0;
+}
+
 static uint8_t CLC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t JSR(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t AND(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -161,7 +174,15 @@ static uint8_t PLP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t BMI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t SEC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t RTI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t EOR(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t EOR(void) {
+	a ^= fetch();
+
+	set_flag(R6502_F_Z, a == 0);
+	set_flag(R6502_F_N, a & 0x80);
+
+	return 1;
+}
 
 static uint8_t LSR(void) {
 	fetch();
@@ -183,20 +204,101 @@ static uint8_t LSR(void) {
 
 static uint8_t PHA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t JMP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t BVC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t CLI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t RTS(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t BVC(void) {
+	if (!get_flag(R6502_F_V)) {
+		++cycles;
+		abs_addr = pc + rel_addr;
+
+		if ((abs_addr & 0xFF00) != (pc & 0xFF00)) ++cycles;
+
+		pc = abs_addr;
+	}
+
+	return 0;
+}
+
+static uint8_t CLI(void) {
+	set_flag(R6502_F_I, 0);
+	return 0;
+}
+
+static uint8_t RTS(void) {
+	sp++;
+	pc = (uint16_t) ram_read_u8(0x0100 + sp);
+	sp++;
+	pc |= (uint16_t) ram_read_u8(0x0100 + sp) << 8;
+
+	pc++;
+
+	return 0;
+}
+
 static uint8_t ADC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t ROR(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t ROR(void) {
+	fetch();
+
+	temp = (uint16_t) (get_flag(R6502_F_C) << 7) | (fetched >> 1);
+	
+	set_flag(R6502_F_C, fetched & 1);
+	set_flag(R6502_F_Z, (temp & 0xFF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+
+	if (instructions[opcode].mode == IM_IMP) {
+		a = temp & 0xFF;
+	} else {
+		ram_write_u8(abs_addr, temp & 0xFF);
+	}
+
+	return 0;
+}
+
 static uint8_t PLA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t BVS(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t SEI(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t STA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t BVS(void) {
+	if (get_flag(R6502_F_V)) {
+		++cycles;
+		abs_addr = pc + rel_addr;
+
+		if ((abs_addr & 0xFF00) != (pc & 0xFF00)) ++cycles;
+
+		pc = abs_addr;
+	}
+
+	return 0;
+}
+
+static uint8_t SEI(void) {
+	set_flag(R6502_F_I, 1);
+	return 0;
+}
+
+static uint8_t STA(void) {
+	ram_write_u8(abs_addr, a);
+	return 0;
+}
+
 static uint8_t STY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t STX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t DEY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t TXA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t BCC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t BCC(void) {
+	if (get_flag(R6502_F_C) == 0) {
+		cycles++;
+		abs_addr = pc + rel_addr;
+
+		if ((abs_addr & 0xFF00) != (pc & 0xFF00)) {
+			cycles++;
+		}
+
+		pc = abs_addr;
+	}
+
+	return 0;
+}
+
 static uint8_t TYA(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t TXS(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t LDY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -220,7 +322,18 @@ static uint8_t CPY(void) {
 	return 0;
 }
 
-static uint8_t CMP(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+static uint8_t CMP(void) {
+	fetch();
+
+	temp = (uint16_t) a - (uint16_t) fetched;
+
+	set_flag(R6502_F_C, a >= fetched);
+	set_flag(R6502_F_Z, (temp & 0xFF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+
+	return 1;
+}
+
 static uint8_t DEC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t INY(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t DEX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
@@ -228,9 +341,33 @@ static uint8_t BNE(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t CLD(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t CPX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 static uint8_t SBC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t INC(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t INC(void) {
+	temp = fetch() + 1;
+	ram_write_u8(abs_addr, temp & 0xFF);
+	set_flag(R6502_F_Z, (temp & 0xFF) == 0);
+	set_flag(R6502_F_N, temp & 0x80);
+	
+	return 0;
+}
+
 static uint8_t INX(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
-static uint8_t BEQ(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
+
+static uint8_t BEQ(void) {
+	if (get_flag(R6502_F_Z)) {
+		cycles++;
+		abs_addr = pc + rel_addr;
+
+		if ((abs_addr & 0xFF00) != (pc & 0xFF00)) {
+			cycles++;
+		}
+
+		pc = abs_addr;
+	}
+
+	return 0;
+}
+
 static uint8_t SED(void) { UNIMPLEMENTED_PROCESSOR_INSTRUCTION(); }
 
 static uint8_t NUL(void) { return 0; } // same as NOP
