@@ -56,6 +56,7 @@ interface NES_Emulator {
 (async () => {
 
 const rom_input = document.getElementById("rom") as HTMLInputElement;
+const roms_div = document.getElementById("roms") as HTMLDivElement;
 
 const canvas = document.getElementById('nes-canvas') as HTMLCanvasElement;
 const canvas_ctx = canvas.getContext('2d');
@@ -118,7 +119,9 @@ function update_canvas() {
 }
 
 function nes_load_rom(rom_data: ArrayBuffer) {
+
 	rom_input.style.display = "none";
+	roms_div.style.display = "none";
 	canvas.style.display = "";
 
 	nes_emulator.__heap_reset();
@@ -131,6 +134,12 @@ function nes_load_rom(rom_data: ArrayBuffer) {
 	new Uint8Array(nes_emulator.memory.buffer, buf, len).set(buffer);
 
 	nes_emulator.nes_load_rom(buf, len);
+}
+
+async function fetch_nes_rom(url: string) {
+	const res = await fetch(url);
+	const data = await res.arrayBuffer();
+	return new Uint8Array(data);
 }
 
 function start_emulation() {
@@ -157,6 +166,28 @@ rom_input.addEventListener('change', function() {
 
 	if(this.files) reader.readAsArrayBuffer(this.files[0]);
 }, false);
+
+fetch('roms')
+.then(q => q.text())
+.then(html => {
+	let dom = document.createElement('html');
+	dom.innerHTML = html;
+	dom.querySelectorAll('a').forEach(a => {
+		let href = 'roms/' + a.innerText;
+
+		let rom_selector = document.createElement('a') as HTMLAnchorElement;
+		rom_selector.href = '#';
+		rom_selector.onclick = async () => {
+			nes_load_rom(await fetch_nes_rom(href));
+			start_emulation();
+		};
+		rom_selector.innerText = href;
+
+		console.log({ rom_selector });
+
+		roms_div.appendChild(rom_selector);
+	});
+});
 
 document.addEventListener('keydown', function(e) {
 	const mapping = KEY_CONTROLLER_MAPPINGS[e.code];
