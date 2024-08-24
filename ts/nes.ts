@@ -167,7 +167,7 @@ rom_input.addEventListener('change', function() {
 	if(this.files) reader.readAsArrayBuffer(this.files[0]);
 }, false);
 
-fetch('roms')
+fetch('roms/')
 .then(q => q.text())
 .then(html => {
 	let dom = document.createElement('html');
